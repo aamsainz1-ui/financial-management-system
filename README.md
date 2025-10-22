@@ -1,141 +1,169 @@
-# 🚀 Welcome to Z.ai Code Scaffold
+# Financial Management System (ระบบจัดการการเงิน)
 
-A modern, production-ready web application scaffold powered by cutting-edge technologies, designed to accelerate your development with [Z.ai](https://chat.z.ai)'s AI-powered coding assistance.
+ระบบจัดการการเงินฉบับสมบูรณ์สำหรับธุรกิจ พัฒนาด้วย Next.js 15, TypeScript และ Tailwind CSS
 
-## ✨ Technology Stack
+## 🌟 คุณสมบัติหลัก
 
-This scaffold provides a robust foundation built with:
+### 💼 การจัดการข้อมูล
+- **ทีมและสมาชิก** จัดการโครงสร้างองค์กร
+- **หมวดหมู่** จัดการประเภทรายรับ-รายจ่าย
+- **ลูกค้า** จัดการข้อมูลลูกค้าและนับจำนวน
+- **รายการธุรกรรม** บันทึกรายรับ-รายจ่าย
 
-### 🎯 Core Framework
-- **⚡ Next.js 15** - The React framework for production with App Router
-- **📘 TypeScript 5** - Type-safe JavaScript for better developer experience
-- **🎨 Tailwind CSS 4** - Utility-first CSS framework for rapid UI development
+### 💰 การเงิน
+- **เงินเดือน** จัดการการจ่ายเงินเดือนพนักงาน
+- **โบนัส** จัดการโบนัสและค่าตอบแทนพิเศษ
+- **ค่าคอมมิชชัน** คำนวณและจัดการค่าคอมมิชชัน
+- **รายงาน** ดูรายงานสรุปการเงิน
 
-### 🧩 UI Components & Styling
-- **🧩 shadcn/ui** - High-quality, accessible components built on Radix UI
-- **🎯 Lucide React** - Beautiful & consistent icon library
-- **🌈 Framer Motion** - Production-ready motion library for React
-- **🎨 Next Themes** - Perfect dark mode in 2 lines of code
+### 👥 ผู้ใช้งาน
+- **ระบบสมาชิก** ลงทะเบียนและเข้าสู่ระบบ
+- **สิทธิ์การใช้งาน** แบ่งระดับผู้ใช้ (Admin, Owner, User)
+- **ความปลอดภัย** ป้องกันการเข้าถึงข้อมูล
 
-### 📋 Forms & Validation
-- **🎣 React Hook Form** - Performant forms with easy validation
-- **✅ Zod** - TypeScript-first schema validation
+### 📁 จัดการไฟล์
+- **File Manager** จัดการเอกสารและไฟล์ในระบบ
+- **อัปโหลด/ดาวน์โหลด** จัดการไฟล์ต่างๆ
 
-### 🔄 State Management & Data Fetching
-- **🐻 Zustand** - Simple, scalable state management
-- **🔄 TanStack Query** - Powerful data synchronization for React
-- **🌐 Axios** - Promise-based HTTP client
+## 🛠️ เทคโนโลยีที่ใช้
 
-### 🗄️ Database & Backend
-- **🗄️ Prisma** - Next-generation Node.js and TypeScript ORM
-- **🔐 NextAuth.js** - Complete open-source authentication solution
+### Frontend
+- **Next.js 15** - React Framework พร้อม App Router
+- **TypeScript** - Type-safe JavaScript
+- **Tailwind CSS 4** - Utility-first CSS Framework
+- **shadcn/ui** - Component Library
+- **Framer Motion** - Animations
+- **Zustand** - State Management
+- **TanStack Query** - Server State Management
 
-### 🎨 Advanced UI Features
-- **📊 TanStack Table** - Headless UI for building tables and datagrids
-- **🖱️ DND Kit** - Modern drag and drop toolkit for React
-- **📊 Recharts** - Redefined chart library built with React and D3
-- **🖼️ Sharp** - High performance image processing
+### Backend
+- **Next.js API Routes** - RESTful API
+- **Prisma** - Database ORM
+- **SQLite** - Database
+- **NextAuth.js** - Authentication
+- **Socket.io** - Real-time Communication
 
-### 🌍 Internationalization & Utilities
-- **🌍 Next Intl** - Internationalization library for Next.js
-- **📅 Date-fns** - Modern JavaScript date utility library
-- **🪝 ReactUse** - Collection of essential React hooks for modern development
+### Development Tools
+- **ESLint** - Code Linting
+- **TypeScript** - Static Type Checking
+- **npm** - Package Management
 
-## 🎯 Why This Scaffold?
+## 🚀 การติดตั้งและรันโปรเจค
 
-- **🏎️ Fast Development** - Pre-configured tooling and best practices
-- **🎨 Beautiful UI** - Complete shadcn/ui component library with advanced interactions
-- **🔒 Type Safety** - Full TypeScript configuration with Zod validation
-- **📱 Responsive** - Mobile-first design principles with smooth animations
-- **🗄️ Database Ready** - Prisma ORM configured for rapid backend development
-- **🔐 Auth Included** - NextAuth.js for secure authentication flows
-- **📊 Data Visualization** - Charts, tables, and drag-and-drop functionality
-- **🌍 i18n Ready** - Multi-language support with Next Intl
-- **🚀 Production Ready** - Optimized build and deployment settings
-- **🤖 AI-Friendly** - Structured codebase perfect for AI assistance
-
-## 🚀 Quick Start
-
+### 1. Clone Repository
 ```bash
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Start production server
-npm start
+git clone https://github.com/YOUR_USERNAME/financial-management-system.git
+cd financial-management-system
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to see your application running.
+### 2. ติดตั้ง Dependencies
+```bash
+npm install
+```
 
-## 🤖 Powered by Z.ai
+### 3. ตั้งค่า Database
+```bash
+npm run db:push
+```
 
-This scaffold is optimized for use with [Z.ai](https://chat.z.ai) - your AI assistant for:
+### 4. รัน Development Server
+```bash
+npm run dev
+```
 
-- **💻 Code Generation** - Generate components, pages, and features instantly
-- **🎨 UI Development** - Create beautiful interfaces with AI assistance  
-- **🔧 Bug Fixing** - Identify and resolve issues with intelligent suggestions
-- **📝 Documentation** - Auto-generate comprehensive documentation
-- **🚀 Optimization** - Performance improvements and best practices
+เปิดเบราว์เซอร์ที่ [http://localhost:3000](http://localhost:3000)
 
-Ready to build something amazing? Start chatting with Z.ai at [chat.z.ai](https://chat.z.ai) and experience the future of AI-powered development!
+## 📋 คำสั่งที่ใช้ได้
 
-## 📁 Project Structure
+```bash
+# Development
+npm run dev          # รัน development server
+npm run build        # Build สำหรับ production
+npm run start        # รัน production server
+npm run lint         # ตรวจสอบคุณภาพโค้ด
+
+# Database
+npm run db:push      # อัปเดต database schema
+npm run db:studio    # เปิด Prisma Studio
+```
+
+## 🏗️ โครงสร้างโปรเจค
 
 ```
 src/
-├── app/                 # Next.js App Router pages
-├── components/          # Reusable React components
-│   └── ui/             # shadcn/ui components
-├── hooks/              # Custom React hooks
-└── lib/                # Utility functions and configurations
+├── app/                 # Next.js App Router
+│   ├── api/            # API Routes
+│   ├── admin/          # Admin Pages
+│   ├── login/          # Login Page
+│   └── page.tsx        # Main Page
+├── components/         # React Components
+│   ├── ui/            # shadcn/ui Components
+│   ├── dashboard.tsx  # Dashboard
+│   ├── forms/         # Form Components
+│   └── ...
+├── lib/               # Utilities
+│   ├── db.ts         # Database Client
+│   ├── auth.ts       # Authentication
+│   └── utils.ts      # Helper Functions
+├── contexts/          # React Contexts
+├── hooks/            # Custom Hooks
+└── types/            # TypeScript Types
 ```
 
-## 🎨 Available Features & Components
+## 👤 ระดับผู้ใช้งาน
 
-This scaffold includes a comprehensive set of modern web development tools:
+- **Owner** - เจ้าของระบบ สิทธิ์สูงสุด
+- **Admin** - ผู้ดูแลระบบ
+- **User** - ผู้ใช้งานทั่วไป
 
-### 🧩 UI Components (shadcn/ui)
-- **Layout**: Card, Separator, Aspect Ratio, Resizable Panels
-- **Forms**: Input, Textarea, Select, Checkbox, Radio Group, Switch
-- **Feedback**: Alert, Toast (Sonner), Progress, Skeleton
-- **Navigation**: Breadcrumb, Menubar, Navigation Menu, Pagination
-- **Overlay**: Dialog, Sheet, Popover, Tooltip, Hover Card
-- **Data Display**: Badge, Avatar, Calendar
+## 🔐 คุณสมบัติความปลอดภัย
 
-### 📊 Advanced Data Features
-- **Tables**: Powerful data tables with sorting, filtering, pagination (TanStack Table)
-- **Charts**: Beautiful visualizations with Recharts
-- **Forms**: Type-safe forms with React Hook Form + Zod validation
+- **Authentication** ระบบยืนยันตัวตน
+- **Authorization** ควบคุมสิทธิ์การเข้าถึง
+- **Protected Routes** ป้องกันการเข้าถึงโดยไม่ได้รับอนุญาต
+- **Input Validation** ตรวจสอบข้อมูลที่ป้อนเข้ามา
 
-### 🎨 Interactive Features
-- **Animations**: Smooth micro-interactions with Framer Motion
-- **Drag & Drop**: Modern drag-and-drop functionality with DND Kit
-- **Theme Switching**: Built-in dark/light mode support
+## 📊 ฟังก์ชันหลัก
 
-### 🔐 Backend Integration
-- **Authentication**: Ready-to-use auth flows with NextAuth.js
-- **Database**: Type-safe database operations with Prisma
-- **API Client**: HTTP requests with Axios + TanStack Query
-- **State Management**: Simple and scalable with Zustand
+### 📈 Dashboard
+- แสดงสรุปข้อมูลการเงิน
+- กราฟและสถิติต่างๆ
+- ภาพรวมธุรกิจ
 
-### 🌍 Production Features
-- **Internationalization**: Multi-language support with Next Intl
-- **Image Optimization**: Automatic image processing with Sharp
-- **Type Safety**: End-to-end TypeScript with Zod validation
-- **Essential Hooks**: 100+ useful React hooks with ReactUse for common patterns
+### 💳 การจัดการรายรับ-รายจ่าย
+- บันทึกรายการรับ-จ่าย
+- จัดการหมวดหมู่
+- ดูประวัติการทำรายการ
 
-## 🤝 Get Started with Z.ai
+### 👥 การจัดการทีม
+- สร้างและจัดการทีม
+- เพิ่มสมาชิก
+- กำหนดตำแหน่งและเงินเดือน
 
-1. **Clone this scaffold** to jumpstart your project
-2. **Visit [chat.z.ai](https://chat.z.ai)** to access your AI coding assistant
-3. **Start building** with intelligent code generation and assistance
-4. **Deploy with confidence** using the production-ready setup
+### 💰 การเงิน
+- จัดการเงินเดือน
+- คำนวณโบนัส
+- จัดการค่าคอมมิชชัน
+
+## 🌐 ภาษาที่รองรับ
+
+- **ไทย** - ภาษาหลักของระบบ
+- **อังกฤษ** - สำหรับคำศัพท์เทคนิค
+
+## 📝 License
+
+MIT License - สามารถนำไปใช้งานได้ฟรี
+
+## 🤝 การมีส่วนร่วม
+
+ยินดีรับการมีส่วนร่วมในการพัฒนาโปรเจค!
+
+1. Fork โปรเจค
+2. สร้าง Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit การเปลี่ยนแปลง (`git commit -m 'Add some AmazingFeature'`)
+4. Push ไปยัง Branch (`git push origin feature/AmazingFeature`)
+5. เปิด Pull Request
 
 ---
 
-Built with ❤️ for the developer community. Supercharged by [Z.ai](https://chat.z.ai) 🚀
+🚀 **พัฒนาด้วย ❤️ โดยใช้เทคโนโลยีล่าสุด**
