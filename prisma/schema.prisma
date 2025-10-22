@@ -1,0 +1,214 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Team {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  leader      String?
+  budget      Int      @default(0)
+  color       String   @default("blue")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  members     Member[]
+  transactions Transaction[]
+  customers   Customer[]
+  customerCounts CustomerCount[]
+}
+
+model Member {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  phone         String?
+  bankName      String?   // ชื่อธนาคาร
+  bankAccount   String?   // เลขบัญชีธนาคาร
+  bankBranch    String?   // สาขาธนาคาร
+  role          String    @default("สมาชิก")
+  position      String?
+  department    String?
+  salary        Int       @default(0)
+  hireDate      DateTime  @default(now())
+  status        String    @default("active")
+  teamId        String?
+  team          Team?     @relation(fields: [teamId], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  salaries      Salary[]
+  commissions   Commission[]
+  bonuses       Bonus[]
+  transactions  Transaction[]
+  customers     Customer[]
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  type        String   // "income" or "expense"
+  budget      Int      @default(0)
+  spent       Int      @default(0)
+  color       String   @default("blue")
+  icon        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  transactions Transaction[]
+}
+
+model Transaction {
+  id            String   @id @default(cuid())
+  title         String
+  description   String?
+  amount        Int
+  type          String   // "income" or "expense"
+  categoryId    String
+  category      Category @relation(fields: [categoryId], references: [id])
+  teamId        String?
+  team          Team?    @relation(fields: [teamId], references: [id])
+  memberId      String?
+  member        Member?  @relation(fields: [memberId], references: [id])
+  bankName      String?  // ชื่อธนาคาร (สำหรับรายรับ)
+  bankAccount   String?  // เลขบัญชีธนาคาร (สำหรับรายรับ)
+  accountName   String?  // ชื่อบัญชี (สำหรับรายรับ)
+  cardNumber    String?  // เลขบัตรเครดิต/เดบิต (สำหรับรายจ่าย)
+  cardHolderName String? // ชื่อผู้ถือบัตร (สำหรับรายจ่าย)
+  date          DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Salary {
+  id          String   @id @default(cuid())
+  memberId    String
+  member      Member   @relation(fields: [memberId], references: [id])
+  amount      Int
+  payDate     DateTime
+  month       Int      // 1-12
+  year        Int
+  status      String   @default("pending") // "pending", "paid", "cancelled"
+  description String?
+  bonus       Int      @default(0)
+  deduction   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Bonus {
+  id          String   @id @default(cuid())
+  memberId    String
+  member      Member   @relation(fields: [memberId], references: [id])
+  amount      Int
+  reason      String?
+  date        DateTime @default(now())
+  status      String   @default("pending") // "pending", "paid", "cancelled"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Commission {
+  id          String   @id @default(cuid())
+  memberId    String
+  member      Member   @relation(fields: [memberId], references: [id])
+  amount      Int
+  percentage  Float?
+  salesAmount Int?
+  description String?
+  date        DateTime @default(now())
+  status      String   @default("pending") // "pending", "paid", "cancelled"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Customer {
+  id            String   @id @default(cuid())
+  name          String
+  email         String?
+  phone         String?
+  address       String?
+  type          String   @default("new") // "new", "deposit", "extension"
+  initialAmount Int      @default(0)
+  extensionAmount Int    @default(0) // จำนวนเงินสำหรับลูกค้าต่อยอด
+  totalAmount   Int      @default(0) // ยอดรวมทั้งหมด
+  teamId        String?
+  team          Team?    @relation(fields: [teamId], references: [id])
+  memberId      String?
+  member        Member?  @relation(fields: [memberId], references: [id])
+  status        String   @default("active") // "active", "inactive", "blacklist"
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  transactions  CustomerTransaction[]
+}
+
+model CustomerTransaction {
+  id          String   @id @default(cuid())
+  customerId  String
+  customer    Customer @relation(fields: [customerId], references: [id])
+  amount      Int
+  type        String   // "deposit", "withdrawal", "extension"
+  description String?
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model CustomerCount {
+  id                        String   @id @default(cuid())
+  newCustomers              Int      @default(0)
+  depositCustomers          Int      @default(0)
+  expenses                  Int      @default(0)
+  totalCustomers            Int      @default(0)
+  averageExpensePerCustomer Float    @default(0)
+  teamId                    String?
+  team                      Team?    @relation(fields: [teamId], references: [id])
+  date                      DateTime @default(now())
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String?  @unique
+  username      String   @unique
+  password      String
+  name          String
+  role          UserRole @default(VIEWER)
+  isActive      Boolean  @default(true)
+  lastLoginAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  auditLogs     AuditLog[]
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  action      String   // "CREATE", "UPDATE", "DELETE", "LOGIN", "LOGOUT"
+  resource    String   // "USER", "TRANSACTION", "TEAM", etc.
+  resourceId  String?
+  oldValue    String?  // JSON string of old values
+  newValue    String?  // JSON string of new values
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+}
+
+enum UserRole {
+  OWNER
+  ADMIN
+  EDITOR
+  VIEWER
+}

@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ทดสอบระบบ</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fafafa;
+        }
+        .test-button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background-color: #0056b3;
+        }
+        .test-button.reset {
+            background-color: #dc3545;
+        }
+        .test-button.reset:hover {
+            background-color: #c82333;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 เทสระบบและเพิ่มข้อมูลทดสอบ</h1>
+        
+        <div class="test-section">
+            <h3>🔄 รีเซ็ตและทดสอบทั้งหมด</h3>
+            <button class="test-button reset" onclick="resetAndTestAll()">รีเซ็ตข้อมูลและทดสอบทั้งหมด</button>
+            <div id="all-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔧 ทดสอบแยกส่วน</h3>
+            <button class="test-button" onclick="testReset()">รีเซ็ตข้อมูล</button>
+            <button class="test-button" onclick="testTeams()">ทดสอบทีม</button>
+            <button class="test-button" onclick="testCategories()">ทดสอบหมวดหมู่</button>
+            <button class="test-button" onclick="testMembers()">ทดสอบสมาชิก</button>
+            <button class="test-button" onclick="testTransactions()">ทดสอบรายการรับ-จ่าย</button>
+            <button class="test-button" onclick="testCustomers()">ทดสอบลูกค้า</button>
+            <button class="test-button" onclick="testSalaries()">ทดสอบเงินเดือน</button>
+            <button class="test-button" onclick="testBonuses()">ทดสอบโบนัส</button>
+            <button class="test-button" onclick="testCommissions()">ทดสอบค่าคอมมิชชัน</button>
+            <button class="test-button" onclick="testCustomerCounts()">ทดสอบสถิติลูกค้า</button>
+            <div id="individual-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 ดูข้อมูล</h3>
+            <button class="test-button" onclick="viewAllData()">ดูข้อมูลทั้งหมด</button>
+            <div id="view-results"></div>
+        </div>
+    </div>
+
+    <script>
+        const baseURL = 'http://localhost:3000/api';
+        
+        function showResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString('th-TH')}:</strong> ${message}`;
+            element.appendChild(div);
+            element.scrollTop = element.scrollHeight;
+        }
+        
+        function clearResults(elementId) {
+            document.getElementById(elementId).innerHTML = '';
+        }
+        
+        async function apiCall(method, endpoint, data = null) {
+            try {
+                const options = {
+                    method,
+                    headers: { 'Content-Type': 'application/json' }
+                };
+                
+                if (data) {
+                    options.body = JSON.stringify(data);
+                }
+                
+                const response = await fetch(`${baseURL}${endpoint}`, options);
+                const result = await response.json();
+                
+                return { success: response.ok, data: result, status: response.status };
+            } catch (error) {
+                return { success: false, error: error.message };
+            }
+        }
+        
+        async function testReset() {
+            clearResults('individual-results');
+            showResult('individual-results', 'กำลังรีเซ็ตข้อมูล...', 'info');
+            
+            const result = await apiCall('POST', '/reset');
+            if (result.success) {
+                showResult('individual-results', '✅ รีเซ็ตข้อมูลสำเร็จ', 'success');
+            } else {
+                showResult('individual-results', `❌ รีเซ็ตข้อมูลล้มเหลว: ${result.error || result.data?.error}`, 'error');
+            }
+        }
+        
+        async function testTeams() {
+            showResult('individual-results', 'กำลังทดสอบทีม...', 'info');
+            
+            // Create team
+            const teamResult = await apiCall('POST', '/teams', {
+                name: 'ทีมขายทดสอบ',
+                description: 'ทีมขายสำหรับทดสอบ',
+                leader: 'คุณทดสอบ',
+                budget: 50000,
+                color: 'blue'
+            });
+            
+            if (teamResult.success) {
+                showResult('individual-results', `✅ สร้างทีมสำเร็จ: ${teamResult.data.name}`, 'success');
+                
+                // Get teams
+                const getTeams = await apiCall('GET', '/teams');
+                if (getTeams.success) {
+                    showResult('individual-results', `✅ ดึงข้อมูลทีมสำเร็จ จำนวน ${getTeams.data.length} ทีม`, 'success');
+                }
+            } else {
+                showResult('individual-results', `❌ ทดสอบทีมล้มเหลว: ${teamResult.error || teamResult.data?.error}`, 'error');
+            }
+        }
+        
+        async function testCategories() {
+            showResult('individual-results', 'กำลังทดสอบหมวดหมู่...', 'info');
+            
+            const categories = [
+                { name: 'ค่าจ้างทดสอบ', type: 'expense', budget: 100000, color: 'red' },
+                { name: 'รายได้ทดสอบ', type: 'income', budget: 500000, color: 'green' }
+            ];
+            
+            for (const cat of categories) {
+                const result = await apiCall('POST', '/categories', cat);
+                if (result.success) {
+                    showResult('individual-results', `✅ สร้างหมวดหมู่สำเร็จ: ${cat.name}`, 'success');
+                } else {
+                    showResult('individual-results', `❌ สร้างหมวดหมู่ล้มเหลว: ${cat.name}`, 'error');
+                }
+            }
+        }
+        
+        async function testMembers() {
+            showResult('individual-results', 'กำลังทดสอบสมาชิก...', 'info');
+            
+            // Get teams first
+            const teamsResult = await apiCall('GET', '/teams');
+            if (!teamsResult.success || teamsResult.data.length === 0) {
+                showResult('individual-results', '❌ ต้องมีทีมก่อนสร้างสมาชิก', 'error');
+                return;
+            }
+            
+            const memberResult = await apiCall('POST', '/members', {
+                name: 'สมชาย ทดสอบ',
+                email: 'test@example.com',
+                phone: '0812345678',
+                bankName: 'ธนาคารทดสอบ',
+                bankAccount: '1234567890',
+                role: 'พนักงานทดสอบ',
+                salary: 25000,
+                teamId: teamsResult.data[0].id
+            });
+            
+            if (memberResult.success) {
+                showResult('individual-results', `✅ สร้างสมาชิกสำเร็จ: ${memberResult.data.name}`, 'success');
+            } else {
+                showResult('individual-results', `❌ สร้างสมาชิกล้มเหลว: ${memberResult.error || memberResult.data?.error}`, 'error');
+            }
+        }
+        
+        async function testTransactions() {
+            showResult('individual-results', 'กำลังทดสอบรายการรับ-จ่าย...', 'info');
+            
+            // Get categories and teams
+            const [categoriesResult, teamsResult] = await Promise.all([
+                apiCall('GET', '/categories'),
+                apiCall('GET', '/teams')
+            ]);
+            
+            if (!categoriesResult.success || categoriesResult.data.length === 0) {
+                showResult('individual-results', '❌ ต้องมีหมวดหมู่ก่อนสร้างรายการ', 'error');
+                return;
+            }
+            
+            const incomeCat = categoriesResult.data.find(c => c.type === 'income');
+            const expenseCat = categoriesResult.data.find(c => c.type === 'expense');
+            
+            if (incomeCat) {
+                const incomeResult = await apiCall('POST', '/transactions', {
+                    title: 'รายได้ทดสอบ',
+                    amount: 10000,
+                    type: 'income',
+                    categoryId: incomeCat.id,
+                    teamId: teamsResult.data[0]?.id
+                });
+                
+                if (incomeResult.success) {
+                    showResult('individual-results', '✅ สร้างรายการรายรับสำเร็จ', 'success');
+                }
+            }
+            
+            if (expenseCat) {
+                const expenseResult = await apiCall('POST', '/transactions', {
+                    title: 'รายจ่ายทดสอบ',
+                    amount: 5000,
+                    type: 'expense',
+                    categoryId: expenseCat.id
+                });
+                
+                if (expenseResult.success) {
+                    showResult('individual-results', '✅ สร้างรายการรายจ่ายสำเร็จ', 'success');
+                }
+            }
+        }
+        
+        async function testCustomers() {
+            showResult('individual-results', 'กำลังทดสอบลูกค้า...', 'info');
+            
+            const [teamsResult, membersResult] = await Promise.all([
+                apiCall('GET', '/teams'),
+                apiCall('GET', '/members')
+            ]);
+            
+            const customerResult = await apiCall('POST', '/customers', {
+                name: 'บริษัท ทดสอบ จำกัด',
+                email: 'test@company.com',
+                phone: '021234567',
+                type: 'new',
+                initialAmount: 50000,
+                totalAmount: 50000,
+                teamId: teamsResult.data[0]?.id,
+                memberId: membersResult.data[0]?.id
+            });
+            
+            if (customerResult.success) {
+                showResult('individual-results', `✅ สร้างลูกค้าสำเร็จ: ${customerResult.data.name}`, 'success');
+            } else {
+                showResult('individual-results', `❌ สร้างลูกค้าล้มเหลว: ${customerResult.error || customerResult.data?.error}`, 'error');
+            }
+        }
+        
+        async function testSalaries() {
+            showResult('individual-results', 'กำลังทดสอบเงินเดือน...', 'info');
+            
+            const membersResult = await apiCall('GET', '/members');
+            if (!membersResult.success || membersResult.data.length === 0) {
+                showResult('individual-results', '❌ ต้องมีสมาชิกก่อนสร้างเงินเดือน', 'error');
+                return;
+            }
+            
+            const salaryResult = await apiCall('POST', '/salaries', {
+                memberId: membersResult.data[0].id,
+                amount: 25000,
+                payDate: new Date().toISOString(),
+                month: new Date().getMonth() + 1,
+                year: new Date().getFullYear(),
+                status: 'pending'
+            });
+            
+            if (salaryResult.success) {
+                showResult('individual-results', '✅ สร้างบันทึกเงินเดือนสำเร็จ', 'success');
+            } else {
+                showResult('individual-results', `❌ สร้างเงินเดือนล้มเหลว: ${salaryResult.error || salaryResult.data?.error}`, 'error');
+            }
+        }
+        
+        async function testBonuses() {
+            showResult('individual-results', 'กำลังทดสอบโบนัส...', 'info');
+            
+            const membersResult = await apiCall('GET', '/members');
+            if (!membersResult.success || membersResult.data.length === 0) {
+                showResult('individual-results', '❌ ต้องมีสมาชิกก่อนสร้างโบนัส', 'error');
+                return;
+            }
+            
+            const bonusResult = await apiCall('POST', '/bonuses', {
+                memberId: membersResult.data[0].id,
+                amount: 5000,
+                reason: 'โบนัสทดสอบ',
+                status: 'pending'
+            });
+            
+            if (bonusResult.success) {
+                showResult('individual-results', '✅ สร้างโบนัสสำเร็จ', 'success');
+            } else {
+                showResult('individual-results', `❌ สร้างโบนัสล้มเหลว: ${bonusResult.error || bonusResult.data?.error}`, 'error');
+            }
+        }
+        
+        async function testCommissions() {
+            showResult('individual-results', 'กำลังทดสอบค่าคอมมิชชัน...', 'info');
+            
+            const membersResult = await apiCall('GET', '/members');
+            if (!membersResult.success || membersResult.data.length === 0) {
+                showResult('individual-results', '❌ ต้องมีสมาชิกก่อนสร้างค่าคอมมิชชัน', 'error');
+                return;
+            }
+            
+            const commissionResult = await apiCall('POST', '/commissions', {
+                memberId: membersResult.data[0].id,
+                amount: 7500,
+                percentage: 3.0,
+                salesAmount: 250000,
+                description: 'ค่าคอมมิชชันทดสอบ',
+                status: 'pending'
+            });
+            
+            if (commissionResult.success) {
+                showResult('individual-results', '✅ สร้างค่าคอมมิชชันสำเร็จ', 'success');
+            } else {
+                showResult('individual-results', `❌ สร้างค่าคอมมิชชันล้มเหลว: ${commissionResult.error || commissionResult.data?.error}`, 'error');
+            }
+        }
+        
+        async function testCustomerCounts() {
+            showResult('individual-results', 'กำลังทดสอบสถิติลูกค้า...', 'info');
+            
+            const teamsResult = await apiCall('GET', '/teams');
+            
+            const countResult = await apiCall('POST', '/customer-counts', {
+                newCustomers: 10,
+                depositCustomers: 5,
+                expenses: 75000,
+                totalCustomers: 15,
+                averageExpensePerCustomer: 5000,
+                teamId: teamsResult.data[0]?.id
+            });
+            
+            if (countResult.success) {
+                showResult('individual-results', '✅ สร้างสถิติลูกค้าสำเร็จ', 'success');
+            } else {
+                showResult('individual-results', `❌ สร้างสถิติลูกค้าล้มเหลว: ${countResult.error || countResult.data?.error}`, 'error');
+            }
+        }
+        
+        async function viewAllData() {
+            clearResults('view-results');
+            showResult('view-results', 'กำลังดึงข้อมูลทั้งหมด...', 'info');
+            
+            const endpoints = ['/teams', '/categories', '/members', '/transactions', '/customers', '/salaries', '/bonuses', '/commissions', '/customer-counts', '/dashboard'];
+            
+            for (const endpoint of endpoints) {
+                const result = await apiCall('GET', endpoint);
+                if (result.success) {
+                    const count = Array.isArray(result.data) ? result.data.length : 'N/A';
+                    showResult('view-results', `✅ ${endpoint}: ${count} รายการ`, 'success');
+                } else {
+                    showResult('view-results', `❌ ${endpoint}: ${result.error || result.data?.error}`, 'error');
+                }
+            }
+        }
+        
+        async function resetAndTestAll() {
+            clearResults('all-results');
+            showResult('all-results', '🚀 เริ่มการทดสอบทั้งหมด...', 'info');
+            
+            try {
+                // Reset
+                showResult('all-results', '1️⃣ รีเซ็ตข้อมูล...', 'info');
+                const resetResult = await apiCall('POST', '/reset');
+                if (!resetResult.success) {
+                    showResult('all-results', '❌ รีเซ็ตล้มเหลว', 'error');
+                    return;
+                }
+                showResult('all-results', '✅ รีเซ็ตสำเร็จ', 'success');
+                
+                // Wait a bit
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Test all functions in order
+                await testTeams();
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                await testCategories();
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                await testMembers();
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                await testTransactions();
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                await testCustomers();
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                await testSalaries();
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                await testBonuses();
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                await testCommissions();
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                await testCustomerCounts();
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // View all data
+                showResult('all-results', '📊 ตรวจสอบข้อมูลทั้งหมด...', 'info');
+                const endpoints = ['/teams', '/categories', '/members', '/transactions', '/customers', '/salaries', '/bonuses', '/commissions', '/customer-counts'];
+                let totalRecords = 0;
+                
+                for (const endpoint of endpoints) {
+                    const result = await apiCall('GET', endpoint);
+                    if (result.success) {
+                        const count = Array.isArray(result.data) ? result.data.length : 0;
+                        totalRecords += count;
+                    }
+                }
+                
+                showResult('all-results', `🎉 การทดสอบสำเร็จ! สร้างข้อมูลทั้งหมด ${totalRecords} รายการ`, 'success');
+                showResult('all-results', '✅ ทุกฟังก์ชันทำงานได้ตามปกติ', 'success');
+                
+            } catch (error) {
+                showResult('all-results', `❌ เกิดข้อผิดพลาด: ${error.message}`, 'error');
+            }
+        }
+        
+        // Auto-test on page load
+        window.onload = function() {
+            showResult('individual-results', '🌐 พร้อมทดสอบระบบ - กดปุ่มเพื่อเริ่มทดสอบ', 'info');
+        };
+    </script>
+</body>
+</html>

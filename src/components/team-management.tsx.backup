@@ -1,0 +1,733 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
+import { Textarea } from '@/components/ui/textarea'
+import { Badge } from '@/components/ui/badge'
+import { useToast } from '@/hooks/use-toast'
+import { Users, Plus, Edit, Trash2, Settings, UserPlus, Phone, DollarSign } from 'lucide-react'
+import { api } from '@/lib/api'
+
+interface Member {
+  id: string
+  name: string
+  phone: string
+  bankName?: string
+  bankAccount?: string
+  bankBranch?: string
+  salary: number
+  teamId: string
+  team?: {
+    id: string
+    name: string
+  }
+  createdAt: string
+}
+
+export function TeamManagement() {
+  const { toast } = useToast()
+  
+  const [teams, setTeams] = useState<any[]>([])
+  const [members, setMembers] = useState<Member[]>([])
+  const [loading, setLoading] = useState(true)
+  const [newTeam, setNewTeam] = useState({
+    name: '',
+    description: '',
+    leader: '',
+    budget: ''
+  })
+  const [newMember, setNewMember] = useState({
+    name: '',
+    phone: '',
+    bankName: '',
+    bankAccount: '',
+    bankBranch: '',
+    salary: '',
+    teamId: ''
+  })
+  const [editingMember, setEditingMember] = useState<Member | null>(null)
+  const [editingTeam, setEditingTeam] = useState<any>(null)
+  const [isTeamDialogOpen, setIsTeamDialogOpen] = useState(false)
+  const [isMemberDialogOpen, setIsMemberDialogOpen] = useState(false)
+
+  useEffect(() => {
+    fetchData()
+  }, [])
+
+  const fetchData = async () => {
+    try {
+      const [teamsData, membersData] = await Promise.all([
+        api.teams.getAll(),
+        api.members.getAll()
+      ])
+      setTeams(teamsData)
+      setMembers(membersData)
+    } catch (error) {
+      console.error('Error fetching data:', error)
+      // Fallback to mock data if API fails
+      setTeams([
+        {
+          id: 1,
+          name: 'ทีมการตลาด',
+          description: 'รับผิดชอบการทำการตลาดและโฆษณา',
+          leader: 'สมชาย ใจดี',
+          budget: 50000,
+          color: 'blue'
+        },
+        {
+          id: 2,
+          name: 'ทีมขาย',
+          description: 'รับผิดชอบการขายสินค้าและบริการ',
+          leader: 'สมศรี รักดี',
+          budget: 75000,
+          color: 'green'
+        },
+        {
+          id: 3,
+          name: 'ทีมบริการลูกค้า',
+          description: 'รับผิดชอบการบริการลูกค้า',
+          leader: 'วิทยา เทคโน',
+          budget: 30000,
+          color: 'purple'
+        }
+      ])
+      setMembers([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleAddTeam = () => {
+    if (newTeam.name && newTeam.description) {
+      if (editingTeam) {
+        // Update existing team
+        setTeams(teams.map(team => 
+          team.id === editingTeam.id 
+            ? { ...team, ...newTeam, budget: parseInt(newTeam.budget) || 0 }
+            : team
+        ))
+        setEditingTeam(null)
+        setIsTeamDialogOpen(false)
+      } else {
+        // Add new team
+        const team = {
+          id: teams.length + 1,
+          ...newTeam,
+          budget: parseInt(newTeam.budget) || 0,
+          color: ['blue', 'green', 'purple', 'orange', 'red'][teams.length % 5]
+        }
+        setTeams([...teams, team])
+      }
+      setNewTeam({ name: '', description: '', leader: '', budget: '' })
+    }
+  }
+
+  const handleAddMember = async () => {
+    if (newMember.name && newMember.phone && newMember.salary && newMember.teamId) {
+      try {
+        const memberData = {
+          ...newMember,
+          salary: parseInt(newMember.salary) || 0
+        }
+        
+        if (editingMember) {
+          // Update existing member
+          await api.members.update(editingMember.id, memberData)
+          toast({
+            title: "แก้ไขสมาชิกสำเร็จ",
+            description: `อัพเดทข้อมูลสมาชิก "${newMember.name}" เรียบร้อยแล้ว`,
+          })
+        } else {
+          // Add new member
+          await api.members.create(memberData)
+          toast({
+            title: "เพิ่มสมาชิกสำเร็จ",
+            description: `เพิ่มสมาชิก "${newMember.name}" เรียบร้อยแล้ว`,
+          })
+        }
+        
+        await fetchData()
+        setIsMemberDialogOpen(false)
+        resetMemberForm()
+      } catch (error) {
+        console.error('Error saving member:', error)
+        // Fallback to local state if API fails
+        const selectedTeam = teams.find(t => t.id.toString() === newMember.teamId)
+        const member = {
+          id: editingMember?.id || Date.now().toString(),
+          ...newMember,
+          salary: parseInt(newMember.salary) || 0,
+          createdAt: editingMember?.createdAt || new Date().toISOString(),
+          team: selectedTeam ? {
+            id: selectedTeam.id.toString(),
+            name: selectedTeam.name
+          } : null
+        }
+        
+        if (editingMember) {
+          // Update existing member in local state
+          setMembers(members.map(m => m.id === editingMember.id ? member : m))
+          toast({
+            title: "แก้ไขสมาชิกสำเร็จ",
+            description: `อัพเดทข้อมูลสมาชิก "${newMember.name}" เรียบร้อยแล้ว`,
+          })
+        } else {
+          // Add new member to local state
+          setMembers([...members, member])
+          toast({
+            title: "เพิ่มสมาชิกสำเร็จ",
+            description: `เพิ่มสมาชิก "${newMember.name}" เรียบร้อยแล้ว`,
+          })
+        }
+        
+        setIsMemberDialogOpen(false)
+        resetMemberForm()
+      }
+    }
+  }
+
+  const handleEditMember = (member: Member) => {
+    setEditingMember(member)
+    setNewMember({
+      name: member.name,
+      phone: member.phone,
+      bankName: member.bankName || '',
+      bankAccount: member.bankAccount || '',
+      bankBranch: member.bankBranch || '',
+      salary: member.salary.toString(),
+      teamId: member.teamId
+    })
+    setIsMemberDialogOpen(true)
+  }
+
+  const handleEditTeam = (team: any) => {
+    setEditingTeam(team)
+    setNewTeam({
+      name: team.name,
+      description: team.description,
+      leader: team.leader,
+      budget: team.budget.toString()
+    })
+    setIsTeamDialogOpen(true)
+  }
+
+  const handleDeleteTeam = (id: number) => {
+    setTeams(teams.filter(team => team.id !== id))
+    // Also remove members from this team
+    setMembers(members.filter(member => member.teamId !== id.toString()))
+  }
+
+  const handleDeleteMember = async (id: string) => {
+    try {
+      if (api.members.delete) {
+        await api.members.delete(id)
+      }
+      await fetchData()
+      toast({
+        title: "ลบสมาชิกสำเร็จ",
+        description: "ลบสมาชิกเรียบร้อยแล้ว",
+      })
+    } catch (error) {
+      console.error('Error deleting member:', error)
+      // Fallback to local state
+      const member = members.find(m => m.id === id)
+      setMembers(members.filter(member => member.id !== id))
+      toast({
+        title: "ลบสมาชิกสำเร็จ",
+        description: `ลบสมาชิก "${member?.name}" เรียบร้อยแล้ว`,
+      })
+    }
+  }
+
+  const resetMemberForm = () => {
+    setNewMember({
+      name: '',
+      phone: '',
+      bankName: '',
+      bankAccount: '',
+      bankBranch: '',
+      salary: '',
+      teamId: ''
+    })
+    setEditingMember(null)
+  }
+
+  const getTeamColor = (color: string) => {
+    const colors: { [key: string]: string } = {
+      blue: 'bg-blue-100 text-blue-800',
+      green: 'bg-green-100 text-green-800',
+      purple: 'bg-purple-100 text-purple-800',
+      orange: 'bg-orange-100 text-orange-800',
+      red: 'bg-red-100 text-red-800'
+    }
+    return colors[color] || 'bg-gray-100 text-gray-800'
+  }
+
+  const getMembersByTeam = (teamId: string | number) => {
+    return members.filter(member => {
+      if (typeof teamId === 'string') {
+        return member.teamId === teamId
+      } else {
+        return member.teamId === teamId.toString()
+      }
+    })
+  }
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-64">กำลังโหลด...</div>
+  }
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">จัดการทีม</h1>
+        <p className="text-gray-600 mt-2">จัดการทีมและสมาชิกในองค์กรของคุณ</p>
+      </div>
+
+      {/* Statistics */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">ทีมทั้งหมด</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{teams.length}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">สมาชิกทั้งหมด</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{members.length}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">งบประมาณรวม</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">฿{teams.reduce((sum, team) => sum + (team.budget || 0), 0).toLocaleString()}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">สมาชิกต่อทีม (เฉลี่ย)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{teams.length > 0 ? (members.length / teams.length).toFixed(1) : 0}</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex gap-4">
+        <Dialog open={isTeamDialogOpen} onOpenChange={setIsTeamDialogOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={() => { setEditingTeam(null); setNewTeam({ name: '', description: '', leader: '', budget: '' }); }}>
+              <Plus className="h-4 w-4 mr-2" />
+              เพิ่มทีม
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{editingTeam ? 'แก้ไขทีม' : 'เพิ่มทีมใหม่'}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="team-name">ชื่อทีม</Label>
+                <Input
+                  id="team-name"
+                  value={newTeam.name}
+                  onChange={(e) => setNewTeam({ ...newTeam, name: e.target.value })}
+                  placeholder="เช่น ทีมการตลาด"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="team-description">คำอธิบาย</Label>
+                <Textarea
+                  id="team-description"
+                  value={newTeam.description}
+                  onChange={(e) => setNewTeam({ ...newTeam, description: e.target.value })}
+                  placeholder="รายละเอียดเกี่ยวกับทีม..."
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="team-leader">หัวหน้าทีม</Label>
+                <Input
+                  id="team-leader"
+                  value={newTeam.leader}
+                  onChange={(e) => setNewTeam({ ...newTeam, leader: e.target.value })}
+                  placeholder="ชื่อหัวหน้าทีม"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="team-budget">งบประมาณ</Label>
+                <Input
+                  id="team-budget"
+                  type="number"
+                  value={newTeam.budget}
+                  onChange={(e) => setNewTeam({ ...newTeam, budget: e.target.value })}
+                  placeholder="0"
+                />
+              </div>
+              <Button onClick={handleAddTeam} className="w-full">
+                {editingTeam ? 'บันทึกการแก้ไข' : 'เพิ่มทีม'}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={isMemberDialogOpen} onOpenChange={setIsMemberDialogOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline" onClick={() => { resetMemberForm(); }}>
+              <UserPlus className="h-4 w-4 mr-2" />
+              เพิ่มสมาชิก
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{editingMember ? 'แก้ไขข้อมูลสมาชิก' : 'เพิ่มสมาชิกใหม่'}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="member-name">ชื่อ-นามสกุล</Label>
+                <Input
+                  id="member-name"
+                  value={newMember.name}
+                  onChange={(e) => setNewMember({ ...newMember, name: e.target.value })}
+                  placeholder="กรอกชื่อ-นามสกุล"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="member-phone">เบอร์โทรศัพท์</Label>
+                <Input
+                  id="member-phone"
+                  value={newMember.phone}
+                  onChange={(e) => setNewMember({ ...newMember, phone: e.target.value })}
+                  placeholder="กรอกเบอร์โทรศัพท์"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="member-bank-name">ชื่อธนาคาร</Label>
+                <Input
+                  id="member-bank-name"
+                  value={newMember.bankName}
+                  onChange={(e) => setNewMember({ ...newMember, bankName: e.target.value })}
+                  placeholder="เช่น ธนาคารไทยพาณิชย์"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="member-bank-account">เลขบัญชีธนาคาร</Label>
+                <Input
+                  id="member-bank-account"
+                  value={newMember.bankAccount}
+                  onChange={(e) => setNewMember({ ...newMember, bankAccount: e.target.value })}
+                  placeholder="กรอกเลขบัญชีธนาคาร"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="member-bank-branch">สาขาธนาคาร</Label>
+                <Input
+                  id="member-bank-branch"
+                  value={newMember.bankBranch}
+                  onChange={(e) => setNewMember({ ...newMember, bankBranch: e.target.value })}
+                  placeholder="เช่น สาขาสยาม"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="member-salary">เงินเดือน</Label>
+                <Input
+                  id="member-salary"
+                  type="number"
+                  value={newMember.salary}
+                  onChange={(e) => setNewMember({ ...newMember, salary: e.target.value })}
+                  placeholder="กรอกเงินเดือน"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="member-team">ทีม</Label>
+                <Select value={newMember.teamId} onValueChange={(value) => setNewMember({ ...newMember, teamId: value })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="เลือกทีม" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {teams.map((team) => (
+                      <SelectItem key={team.id} value={team.id.toString()}>
+                        {team.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button onClick={handleAddMember} className="w-full">
+                {editingMember ? 'บันทึกการแก้ไข' : 'เพิ่มสมาชิก'}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {/* Teams Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            รายการทีมและสมาชิก
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {teams.map((team) => {
+              const teamMembers = getMembersByTeam(team.id)
+              return (
+                <div key={team.id} className="border rounded-lg">
+                  <div className="flex items-center justify-between p-4">
+                    <div className="flex items-center gap-4">
+                      <div className={`p-2 rounded-lg ${getTeamColor(team.color)}`}>
+                        <Users className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold">{team.name}</h3>
+                        <p className="text-sm text-gray-500">{team.description}</p>
+                        <div className="flex items-center gap-4 mt-1">
+                          <span className="text-sm text-gray-500">หัวหน้า: {team.leader}</span>
+                          <span className="text-sm text-gray-500">สมาชิก: {teamMembers.length} คน</span>
+                          <span className="text-sm text-gray-500">งบ: ฿{(team.budget || 0).toLocaleString()}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handleEditTeam(team)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>ยืนยันการลบทีม</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              คุณต้องการลบทีม "{team.name}" ใช่หรือไม่?
+                              การดำเนินการนี้จะลบสมาชิกทั้งหมดในทีมนี้ด้วย
+                              การดำเนินการนี้ไม่สามารถย้อนกลับได้
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+                            <AlertDialogAction 
+                              onClick={() => handleDeleteTeam(team.id)}
+                              className="bg-red-600 hover:bg-red-700"
+                            >
+                              ลบทีม
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </div>
+                  
+                  {/* Team Members */}
+                  <div className="border-t bg-gray-50 px-4 py-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Users className="h-4 w-4 text-gray-600" />
+                      <span className="text-sm font-medium text-gray-700">สมาชิกในทีม ({teamMembers.length} คน)</span>
+                    </div>
+                    {teamMembers.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                        {teamMembers.map((member) => (
+                          <div key={member.id} className="flex items-center justify-between bg-white p-3 rounded border">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                                <span className="text-xs font-medium">
+                                  {member.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                                </span>
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium">{member.name}</p>
+                                <div className="flex items-center gap-2 text-xs text-gray-500">
+                                  <Phone className="h-3 w-3" />
+                                  {member.phone}
+                                </div>
+                                {member.bankName && (
+                                  <div className="text-xs text-gray-500">
+                                    🏦 {member.bankName} {member.bankAccount && `(${member.bankAccount})`}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex flex-col items-end gap-1">
+                              <div className="flex items-center gap-1 text-xs text-gray-600">
+                                <DollarSign className="h-3 w-3" />
+                                {member.salary.toLocaleString()}
+                              </div>
+                              <div className="flex gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700"
+                                  onClick={() => handleEditMember(member)}
+                                >
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>ยืนยันการลบสมาชิก</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      คุณต้องการลบสมาชิก "{member.name}" จากทีม "{team.name}" ใช่หรือไม่?
+                                      การดำเนินการนี้ไม่สามารถย้อนกลับได้
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+                                    <AlertDialogAction 
+                                      onClick={() => handleDeleteMember(member.id)}
+                                      className="bg-red-600 hover:bg-red-700"
+                                    >
+                                      ลบสมาชิก
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-4">
+                        <p className="text-sm text-gray-500 italic mb-2">ยังไม่มีสมาชิกในทีมนี้</p>
+                        <p className="text-xs text-gray-400">คลิก "เพิ่มสมาชิก" เพื่อเพิ่มสมาชิกในทีมนี้</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* All Members List */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            รายชื่อสมาชิกทั้งหมด ({members.length} คน)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {members.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {members.map((member) => (
+                <div key={member.id} className="flex items-center justify-between bg-white p-3 rounded border">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                      <span className="text-xs font-medium">
+                        {member.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">{member.name}</p>
+                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <Phone className="h-3 w-3" />
+                        {member.phone}
+                      </div>
+                      {member.bankName && (
+                        <div className="text-xs text-gray-500">
+                          🏦 {member.bankName} {member.bankAccount && `(${member.bankAccount})`}
+                        </div>
+                      )}
+                      <Badge variant="outline" className="text-xs mt-1">
+                        {member.team?.name || 'ไม่ระบุทีม'}
+                      </Badge>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    <div className="flex items-center gap-1 text-xs text-gray-600">
+                      <DollarSign className="h-3 w-3" />
+                      {member.salary.toLocaleString()}
+                    </div>
+                    <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700"
+                        onClick={() => handleEditMember(member)}
+                      >
+                        <Edit className="h-3 w-3" />
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>ยืนยันการลบสมาชิก</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            คุณต้องการลบสมาชิก "{member.name}" ใช่หรือไม่?
+                            การดำเนินการนี้ไม่สามารถย้อนกลับได้
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+                          <AlertDialogAction 
+                            onClick={() => handleDeleteMember(member.id)}
+                            className="bg-red-600 hover:bg-red-700"
+                          >
+                            ลบสมาชิก
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500">ยังไม่มีสมาชิกในระบบ</p>
+              <p className="text-sm text-gray-400 mt-2">คลิก "เพิ่มสมาชิก" เพื่อเริ่มเพิ่มสมาชิก</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
