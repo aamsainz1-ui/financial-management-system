@@ -48,27 +48,122 @@ docker-compose restart nginx
 
 ---
 
-## 🌐 วิธีที่ 2: Vercel Deployment (ง่ายที่สุด)
+## 🌐 วิธีที่ 2: Vercel Deployment (ง่ายที่สุด - แนะนำสำหรับ Preview)
 
-### 1. Install Vercel CLI
-```bash
-npm i -g vercel
-```
+### วิธี A: Deploy ผ่าน Vercel Dashboard (ไม่ต้องใช้ CLI) ⭐
 
-### 2. Deploy
-```bash
-# Login สู่ Vercel
-vercel login
+1. **เข้าสู่ Vercel**
+   - ไปที่ https://vercel.com
+   - Login ด้วย GitHub account
 
-# Deploy
-vercel --prod
-```
+2. **Import Project**
+   - คลิก "Add New..." → "Project"
+   - เลือก repository: `aamsainz1-ui/financial-management-system`
+   - คลิก "Import"
 
-### 3. Setup Environment Variables ใน Vercel Dashboard
-- ไปที่ Vercel Dashboard
-- เลือก Project
-- Settings → Environment Variables
-- เพิ่มตัวแปรจาก `.env.production`
+3. **Configure Project**
+   - Framework Preset: `Next.js` (auto-detected)
+   - Root Directory: `./` (default)
+   - Build Command: `npm run build` (default)
+   - Output Directory: `.next` (default)
+
+4. **ตั้งค่า Environment Variables**
+
+   คลิก "Environment Variables" และเพิ่ม:
+
+   ```
+   JWT_SECRET=your-secure-random-32-character-secret
+   NODE_ENV=production
+   NEXT_PUBLIC_APP_URL=https://your-app-name.vercel.app
+   ```
+
+   **วิธีสร้าง JWT_SECRET:**
+   ```bash
+   openssl rand -base64 32
+   ```
+
+5. **Deploy!**
+   - คลิก "Deploy"
+   - รอ 2-3 นาที
+   - ✅ คุณจะได้ Preview URL: `https://your-app-name.vercel.app`
+
+### วิธี B: Deploy ผ่าน CLI
+
+1. **Install Vercel CLI**
+   ```bash
+   npm i -g vercel
+   ```
+
+2. **Deploy**
+   ```bash
+   # Login สู่ Vercel
+   vercel login
+
+   # Deploy Preview (ทดสอบก่อน)
+   vercel
+
+   # Deploy Production
+   vercel --prod
+   ```
+
+3. **Setup Environment Variables ใน Vercel Dashboard**
+   - ไปที่ Vercel Dashboard
+   - เลือก Project
+   - Settings → Environment Variables
+   - เพิ่มตัวแปรด้านบน
+
+### 🔐 Default Login Credentials
+
+หลัง deploy เสร็จ ใช้บัญชีเหล่านี้ในการ login:
+
+| Username | Password | Role | สิทธิ์ |
+|----------|----------|------|--------|
+| `owner` | `123456` | OWNER | ทุกอย่าง (สิทธิ์สูงสุด) |
+| `admin` | `123456` | ADMIN | จัดการระบบ, ลบข้อมูล |
+| `editor` | `123456` | EDITOR | แก้ไขข้อมูล |
+| `viewer` | `123456` | VIEWER | ดูข้อมูลอย่างเดียว |
+
+**⚠️ สำคัญ:** ควรเปลี่ยน password ใน production!
+
+### 🧪 ทดสอบหลัง Deploy
+
+1. **Test Health Check**
+   ```bash
+   curl https://your-app-name.vercel.app/api/health
+   ```
+
+   ควรได้: `{"message":"Good!"}`
+
+2. **Test Login**
+   ```bash
+   curl -X POST https://your-app-name.vercel.app/api/auth/login \
+     -H "Content-Type: application/json" \
+     -d '{"username":"admin","password":"123456"}'
+   ```
+
+3. **Test ใน Browser**
+   - เปิด `https://your-app-name.vercel.app`
+   - Login ด้วย admin/123456
+   - ทดสอบฟีเจอร์ต่างๆ
+
+### 🔄 Auto Deployment
+
+Vercel จะ auto-deploy เมื่อ:
+- Push ไป `main` branch → Production
+- Push ไป branch อื่น → Preview
+- Create PR → Preview with unique URL
+
+### 🌍 Custom Domain (Optional)
+
+1. ไปที่ Vercel → Project Settings → Domains
+2. คลิก "Add Domain"
+3. ใส่ domain (เช่น `app.yourdomain.com`)
+4. Update DNS:
+   ```
+   Type: CNAME
+   Name: app
+   Value: cname.vercel-dns.com
+   ```
 
 ---
 
