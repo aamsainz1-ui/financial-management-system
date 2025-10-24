@@ -1,14 +1,6 @@
 {
-  "buildCommand": "npm run build",
-  "devCommand": "npm run dev",
-  "installCommand": "npm install",
   "framework": "nextjs",
   "regions": ["sin1"],
-  "env": {
-    "NODE_ENV": "production",
-    "NEXT_PUBLIC_APP_URL": "@app_url",
-    "JWT_SECRET": "@jwt_secret"
-  },
   "headers": [
     {
       "source": "/api/(.*)",
