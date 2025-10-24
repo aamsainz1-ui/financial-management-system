@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { authenticateUser, generateToken, createAuditLog } from '@/lib/auth-server'
+import { authenticateUser, generateToken, createAuditLog } from '@/lib/memory-auth'
 import { getClientIP } from '@/lib/utils'
 
 export async function POST(request: NextRequest) {
