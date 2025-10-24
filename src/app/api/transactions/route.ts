@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
 import { memoryStorage } from '@/lib/memory-storage'
 import { addTimestamps } from '@/lib/time-utils'
 
