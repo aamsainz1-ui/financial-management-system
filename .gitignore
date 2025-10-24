@@ -46,4 +46,37 @@ dev.log
 test
 prompt
 
+# logs
 server.log
+*.log
+
+# database files (เก็บ schema แต่ไม่เก็บ data)
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+db/*.db
+prisma/db/*.db
+
+# test files
+test-*.js
+test-*.html
+test-*.ts
+test_*.sh
+*-test.*
+
+# scripts and utilities (ถ้าไม่ต้องการใน git)
+# create-*.js
+# fix-*.js
+# debug-*.js
+
+# archives and backups
+*.tar.gz
+*.zip
+*.backup
+*.bak
+
+# temporary files
+tmp/
+temp/
+*.tmp
